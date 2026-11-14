@@ -26,15 +26,19 @@ their images are still downloaded from the URLs configured by the user. Check th
 
 ## Development
 
-The app uses Preact and requires Node.js 22 or newer. To install dependencies and
-run the security regression tests from the repository root:
+The app uses Preact. End users do not need Node.js; the Windows installer
+includes the NW.js runtime. To build the installer, the build machine needs
+Node.js 22 or newer and NSIS. From the repository root:
 
 ```text
 cd app
 npm ci
 npm test
+npm run build:windows
 ```
 
-To launch the desktop app, use an NW.js runtime whose embedded Node.js version is
-22 or newer, then run `nw .` from the `app` directory. The old AngularJS UI and
-Jasmine/Bower test harness have been removed.
+The installer is written to `release/windows/Sputnik-x64-Setup.exe`. The script
+downloads the pinned NW.js runtime and packages the app with NSIS. The same
+process runs on Windows in GitHub Actions for manual builds and `v*` tags; the
+installer is published there as a downloadable workflow artifact and attached
+to GitHub releases created from `v*` tags.

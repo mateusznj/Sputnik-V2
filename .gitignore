@@ -21,3 +21,7 @@ node_modules
 
 # data folder for testing
 /data
+
+# generated Windows installers and downloaded NW.js runtime
+/release
+/.cache
