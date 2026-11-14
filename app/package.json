@@ -1,9 +1,13 @@
 {
   "name": "Sputnik-Dev",
   "main": "index.html",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "scripts": {
+    "test": "node --test ../spec/security/articleHtml.test.js ../spec/integration/feedsAndArticles.test.js",
     "test:security": "node --test ../spec/security/articleHtml.test.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "webkit": {
     "plugin": false
@@ -19,13 +23,19 @@
     "min_height": 400
   },
   "dependencies": {
-    "cheerio": "0.12.2",
-    "feedparser": "0.16.x",
-    "iconv-lite": "0.2.x",
-    "nedb": "0.8.x",
-    "q": "0.9.x",
-    "request": "2.x.x",
-    "xmlbuilder": "0.4.x",
-    "xmldoc": "0.1.x"
+    "@seald-io/nedb": "4.1.2",
+    "axios": "1.21.1",
+    "cheerio": "1.2.0",
+    "feedparser": "2.6.1",
+    "htm": "3.1.1",
+    "iconv-lite": "0.7.3",
+    "preact": "11.2.0",
+    "q": "1.5.1",
+    "sanitize-html": "2.18.2",
+    "xmlbuilder": "15.1.1",
+    "xmldoc": "3.0.0"
+  },
+  "devDependencies": {
+    "preact-render-to-string": "6.8.3"
   }
 }

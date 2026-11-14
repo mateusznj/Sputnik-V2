@@ -1,6 +1,6 @@
 'use strict';
 
-var Datastore = require('nedb');
+var Datastore = require('@seald-io/nedb');
 var Q = require('q');
 
 exports.make = function (dbPath) {

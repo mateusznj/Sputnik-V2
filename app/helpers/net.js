@@ -1,55 +1,28 @@
 'use strict';
 
 var Q = require('q');
-var request = require('request');
-var zlib = require('zlib');
+var axios = require('axios');
 
 exports.getUrl = function (url, options) {
-    var deferred = Q.defer();
-    
     options = options || {};
-    
-    options.url = url;
-    options.encoding = null;
-    options.headers = {
-        "User-Agent": "Sputnik News Reader",
-        "Accept-Encoding": "gzip, deflate",
-    };
-    
-    if (!options.timeout) {
-        options.timeout = 20000;
-    }
-    
-    request(options, function (err, response, body) {
-        if (err) {
-            deferred.reject(err);
-        } else if (response.statusCode === 404) {
-            deferred.reject({
-                code: '404'
-            });
-        } else if (response.statusCode !== 200) {
-            deferred.reject({
-                code: 'unknownError'
-            });
-        } else {
-            // if response came compressed
-            var encoding = response.headers['content-encoding'];
 
-            if (encoding === 'gzip') {
-                zlib.gunzip(body, function (err, decoded) {
-                    deferred.resolve(decoded);
-                });
-            } else if (encoding === 'deflate') {
-                zlib.inflate(body, function (err, decoded) {
-                    deferred.resolve(decoded);
-                });
-            } else {
-                deferred.resolve(body);
-            }
+    return Q(axios.get(url, {
+        timeout: options.timeout || 20000,
+        responseType: 'arraybuffer',
+        headers: {
+            'User-Agent': 'Sputnik News Reader',
+            'Accept-Encoding': 'gzip, deflate'
+        },
+        validateStatus: function () {
+            return true;
         }
-    }).on('error', function (err) {
-        // nothing
+    })).then(function (response) {
+        if (response.status === 404) {
+            return Q.reject({ code: '404' });
+        }
+        if (response.status !== 200) {
+            return Q.reject({ code: 'unknownError' });
+        }
+        return response.data;
     });
-    
-    return deferred.promise;
 };
