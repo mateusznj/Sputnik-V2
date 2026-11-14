@@ -3,6 +3,7 @@
 sputnik.directive('articlesList', function ($sanitize, $rootScope) {
     
     var organizer = require('./helpers/articlesOrganizer');
+    var articleHtml = require('./helpers/articleHtml');
     var fs = require('fs');
     var articleTemplate = fs.readFileSync('./views/read/article.html', { encoding: 'utf8' });
     
@@ -19,6 +20,10 @@ sputnik.directive('articlesList', function ($sanitize, $rootScope) {
             }
         }
         return null;
+    }
+
+    function getArticleElement(article) {
+        return document.getElementById(article.id);
     }
     
     function getArticleForDomEvent(evt) {
@@ -37,36 +42,18 @@ sputnik.directive('articlesList', function ($sanitize, $rootScope) {
     //-----------------------------------------------------
     
     function getDayLabelHtml(article) {
-        return '<div class="articles-sheet__element  day-label">' + article.dayLabel + '</div>';
-    }
-    
-    function getFeedInfoHtml(article) {
-        var feedInfo = '';
-        if (article.feed.favicon) {
-            feedInfo += '<img src="' + article.feed.favicon + '" class="article__feed-icon"/>';
-        } else {
-            feedInfo += '<div class="article__feed-icon  article__feed-icon--none"></div>';
-        }
-        feedInfo += '<span class="article__feed-title"> ' + article.feed.title + '</span>';
-        return feedInfo;
-    }
-    
-    function getTagsHtml(article) {
-        var articleTags = '';
-        article.tags.forEach(function (tag) {
-            articleTags += '<span class="article__tag-item">' + tag.name + '</span> ';
-        });
-        return articleTags;
+        return '<div class="articles-sheet__element  day-label">' + articleHtml.escape(article.dayLabel) + '</div>';
     }
     
     function getArticleContentHtml(article) {
         var content = article.content;
-        content = processHtml(content, article.link);
+        var articleUrl = articleHtml.httpUrl(article.link);
+        content = processHtml(content, articleUrl);
         try {
             content = $sanitize(content);
         } catch (err) {
             // if not sanitized, kill it as insecure
-            content = 'Oops. Sorry, this article can\'t be displayed. <a href="' + article.link + '">See it in the browser.</a>';
+            content = 'Oops. Sorry, this article can\'t be displayed. <a href="' + articleUrl + '">See it in the browser.</a>';
         }
         return lazyLoadImages(content);
     }
@@ -110,13 +97,19 @@ sputnik.directive('articlesList', function ($sanitize, $rootScope) {
         link: function ($scope, $element) {
             
             var articleTagsChangedWatcher = $rootScope.$on('articleTagsChanged', function (evt, article) {
-                angular.element('#' + article.id + ' .js-article-tags')[0].innerHTML = getTagsHtml(article);
+                var articleElement = getArticleElement(article);
+                if (articleElement) {
+                    angular.element(articleElement).find('.js-article-tags')[0].innerHTML = articleHtml.renderTags(article);
+                }
             });
             var articleReadStateChangedWatcher = $rootScope.$on('articleReadStateChanged', function (evt, article) {
-                if (article.isRead) {
-                    angular.element('#' + article.id).addClass('article--read');
-                } else {
-                    angular.element('#' + article.id).removeClass('article--read');
+                var articleElement = getArticleElement(article);
+                if (articleElement) {
+                    if (article.isRead) {
+                        angular.element(articleElement).addClass('article--read');
+                    } else {
+                        angular.element(articleElement).removeClass('article--read');
+                    }
                 }
             });
             
@@ -140,17 +133,7 @@ sputnik.directive('articlesList', function ($sanitize, $rootScope) {
                         html += getDayLabelHtml(art);
                     }
                     
-                    var t = articleTemplate.replace('{{art.id}}', art.id);
-                    if (art.isRead) {
-                        t = t.replace('{{isReadClass}}', 'article--read');
-                    } else {
-                        t = t.replace('{{isReadClass}}', '');
-                    }
-                    t = t.replace('{{art.title}}', art.title);
-                    t = t.replace(/\{\{art.link\}\}/g, art.link);
-                    t = t.replace('{{articleContent}}', getArticleContentHtml(art));
-                    t = t.replace('{{feedInfo}}', getFeedInfoHtml(art));
-                    t = t.replace('{{articleTags}}', getTagsHtml(art));
+                    var t = articleHtml.renderArticle(articleTemplate, art, getArticleContentHtml(art));
                     
                     html += t;
                 });

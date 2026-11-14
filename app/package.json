@@ -2,6 +2,9 @@
   "name": "Sputnik-Dev",
   "main": "index.html",
   "version": "1.0.2",
+  "scripts": {
+    "test:security": "node --test ../spec/security/articleHtml.test.js"
+  },
   "webkit": {
     "plugin": false
   },
