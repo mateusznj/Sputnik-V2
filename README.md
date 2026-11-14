@@ -19,3 +19,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+## Privacy and updates
+
+Sputnik does not send usage telemetry or check for updates automatically. Feeds and
+their images are still downloaded from the URLs configured by the user. Check the
+[GitHub releases](https://github.com/dz0ny/sputnik/releases) page for updates.

@@ -1,17 +1,12 @@
 'use strict';
 
-function AppCtrl($scope, $location, config, feedsService, articlesService, faviconsService, updateService) {
+function AppCtrl($scope, $location, config, feedsService, articlesService, faviconsService) {
     
-    var os = require('os');
-    var analytics = require('./helpers/analytics');
     var gui = require('nw.gui');
-    var win = gui.Window.get();
     
     $scope.allTags = [];
     
     $scope.lastSignificantEvent = 'appJustStarted';
-    
-    analytics.init(config.analyticsUrl, config.guid, config.version);
     
     //-----------------------------------------------------
     // Notification bar
@@ -233,34 +228,7 @@ function AppCtrl($scope, $location, config, feedsService, articlesService, favic
     
     document.body.addEventListener('click', supportExternalLinks, false);
     
-    //-----------------------------------------------------
-    // Checking for new version
-    //-----------------------------------------------------
-    
-    function checkForUpdates() {
-        updateService.checkUpdates()
-        .then(function (newVersion) {
-            localStorage.newAppVersion = JSON.stringify({
-                version: newVersion
-            });
-            displayNewVersionAvailable();
-            $scope.$apply();
-        });
-    }
-    
-    function displayNewVersionAvailable() {
-        var newAppVersion = JSON.parse(localStorage.newAppVersion || 'null');
-        if (newAppVersion) {
-            if (!updateService.isNewerVersion(newAppVersion.version)) {
-                // app was updated to latest version, so we can erase this info
-                localStorage.removeItem('newAppVersion');
-            } else {
-                $scope.newVersionAvailable = newAppVersion.version;
-            }
-        }
-    }
-    
-    displayNewVersionAvailable();
+    localStorage.removeItem('newAppVersion');
     
     //-----------------------------------------------------
     // Schedule
@@ -274,37 +242,11 @@ function AppCtrl($scope, $location, config, feedsService, articlesService, favic
         
         var schedule = JSON.parse(localStorage.schedule || '{}');
         
-        var today = new Date();
         var nowTime = Date.now();
         
-        // once every day send analytics daily hit
-        var todayDate = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-        if (todayDate !== schedule.lastAnalyticsDailyHit) {
-            analytics.dailyHit();
-            schedule.lastAnalyticsDailyHit = todayDate;
-        }
-        
-        // once every month send reaport about basic usage informations
-        if (!schedule.nextAnalyticsMonthlyReaport) {
-            // first reaport in 7 days
-            schedule.nextAnalyticsMonthlyReaport = nowTime + daysToMs(7);
-        } else if (schedule.nextAnalyticsMonthlyReaport <= nowTime) {
-            analytics.monthlyReaport({
-                feedsCount: feedsService.feeds.length,
-                categoriesCount: feedsService.categoriesNames.length,
-                tagsCount: articlesService.allTags.length,
-                articlesDbSize: articlesService.dbSize,
-                platform: config.targetPlatform + '|' + os.platform() + '|' + os.type() + '|' + os.release(),
-                windowSize: win.width + 'x' + win.height
-            });
-            schedule.nextAnalyticsMonthlyReaport = nowTime + daysToMs(30);
-        }
-        
-        // check for new version every 7 days
-        if (!schedule.nextCheckForUpdates || schedule.nextCheckForUpdates <= nowTime) {
-            schedule.nextCheckForUpdates = nowTime + daysToMs(7);
-            checkForUpdates();
-        }
+        delete schedule.lastAnalyticsDailyHit;
+        delete schedule.nextAnalyticsMonthlyReaport;
+        delete schedule.nextCheckForUpdates;
         
         // update all feeds' favicons every 7 days
         if (!schedule.nextFaviconUpdate || schedule.nextFaviconUpdate <= nowTime) {

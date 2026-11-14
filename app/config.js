@@ -5,13 +5,6 @@ function initSputnikConfig() {
     var fs = require('fs');
     var gui = require('nw.gui');
     
-    function generateGuid() {
-        var crypto = require('crypto');
-        var rand = crypto.randomBytes(8).toString('hex');
-        var now = Date.now().toString();
-        return crypto.createHash('md5').update(rand + now).digest('hex');
-    }
-    
     var appConf = JSON.parse(fs.readFileSync('./appConfig.json'));
     
     var dataHomeFolder = appConf.dataHomeFolder;
@@ -38,14 +31,11 @@ function initSputnikConfig() {
     
     // default values
     
-    if (!userConf.guid && localStorage.guid) {
-        // legacy from v0.9.0
-        // guid was stored in localStorage
-        setUserConfProperty('guid', localStorage.guid);
+    if (Object.prototype.hasOwnProperty.call(userConf, 'guid')) {
+        delete userConf.guid;
+        fs.writeFileSync(userConfPath, JSON.stringify(userConf, null, 4), { encoding: 'utf8' });
     }
-    if (!userConf.guid) {
-        setUserConfProperty('guid', generateGuid());
-    }
+    localStorage.removeItem('guid');
     
     if (userConf.articlesPerPage === undefined) {
         setUserConfProperty('articlesPerPage', 30);
@@ -73,21 +63,8 @@ function initSputnikConfig() {
         get websiteUrl() {
             return appConf.websiteUrl;
         },
-        get websiteUrlUpdate() {
-            return appConf.websiteUrlUpdate;
-        },
         get websiteUrlDonate() {
             return appConf.websiteUrlDonate;
-        },
-        get analyticsUrl() {
-            return appConf.analyticsUrl;
-        },
-        get checkUpdatesUrl() {
-            return appConf.checkUpdatesUrl;
-        },
-        
-        get guid() {
-            return userConf.guid;
         },
         get articlesPerPage() {
             return userConf.articlesPerPage;
