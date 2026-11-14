@@ -3,7 +3,7 @@
 function initSputnikConfig() {
     
     var fs = require('fs');
-    var gui = require('nw.gui');
+    var gui = window.nw;
     
     var appConf = JSON.parse(fs.readFileSync('./appConfig.json'));
     
@@ -26,7 +26,7 @@ function initSputnikConfig() {
     
     function setUserConfProperty(key, value) {
         userConf[key] = value;
-        fs.writeFile(userConfPath, JSON.stringify(userConf, null, 4), { encoding: 'utf8' });
+        fs.writeFileSync(userConfPath, JSON.stringify(userConf, null, 4), { encoding: 'utf8' });
     }
     
     // default values

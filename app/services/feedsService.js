@@ -1,6 +1,6 @@
 'use strict';
 
-sputnik.factory('feedsService', function ($rootScope, feedsStorage, opml) {
+module.exports = function createFeedsService(events, feedsStorage, opml) {
     
     var Q = require('q');
     
@@ -78,7 +78,7 @@ sputnik.factory('feedsService', function ($rootScope, feedsStorage, opml) {
             set siteUrl(value) {
                 if (feedModel.siteUrl !== value) {
                     feedsStorage.setFeedValue(feedModel.url, 'siteUrl', value);
-                    $rootScope.$broadcast('feedSiteUrlSpecified', this);
+                    events.emit('feedSiteUrlSpecified', this);
                 }
             },
             get favicon() {
@@ -111,7 +111,7 @@ sputnik.factory('feedsService', function ($rootScope, feedsStorage, opml) {
                 feedsStorage.removeFeed(feedModel.url);
                 constructFeedsList();
                 
-                $rootScope.$broadcast('feedRemoved', this);
+                events.emit('feedRemoved', this);
             },
         };
     }
@@ -169,7 +169,7 @@ sputnik.factory('feedsService', function ($rootScope, feedsStorage, opml) {
     
     function recountUnreadArticles() {
         recountUnreadArticlesInternal();
-        $rootScope.$broadcast('unreadArticlesRecounted');
+        events.emit('unreadArticlesRecounted');
     }
     
     //-----------------------------------------------------
@@ -179,7 +179,7 @@ sputnik.factory('feedsService', function ($rootScope, feedsStorage, opml) {
     constructFeedsList();
     rebuildTree();
     
-    $rootScope.$on('unreadArticlesCountChanged', function (evt, feedUrl, count) {
+    events.on('unreadArticlesCountChanged', function (feedUrl, count) {
         var feed = getFeedByUrl(feedUrl);
         
         if (!feed) {
@@ -206,7 +206,7 @@ sputnik.factory('feedsService', function ($rootScope, feedsStorage, opml) {
     function importOpml(fileContent) {
         opml.import(fileContent, feedsStorage);
         constructFeedsList();
-        $rootScope.$broadcast('feedsImported');
+        events.emit('feedsImported');
     }
     
     function exportOpml() {
@@ -228,7 +228,7 @@ sputnik.factory('feedsService', function ($rootScope, feedsStorage, opml) {
         
         var feed = getFeedByUrl(feedModel.url);
         
-        $rootScope.$broadcast('feedAdded', feed);
+        events.emit('feedAdded', feed);
         
         return feed;
     }
@@ -280,4 +280,4 @@ sputnik.factory('feedsService', function ($rootScope, feedsStorage, opml) {
             return totalUnreadCount;
         },
     };
-});
+};

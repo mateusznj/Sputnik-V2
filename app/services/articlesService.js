@@ -1,6 +1,6 @@
 'use strict';
 
-sputnik.factory('articlesService', function ($rootScope, articlesStorage, feedsService) {
+module.exports = function createArticlesService(events, articlesStorage, feedsService) {
     
     var Q = require('q');
     
@@ -11,6 +11,9 @@ sputnik.factory('articlesService', function ($rootScope, articlesStorage, feedsS
     //-----------------------------------------------------
     
     function getTag(tagId) {
+        if (!tags) {
+            return null;
+        }
         for (var i = 0; i < tags.length; i += 1) {
             if (tags[i]._id === tagId) {
                 return tags[i];
@@ -23,7 +26,7 @@ sputnik.factory('articlesService', function ($rootScope, articlesStorage, feedsS
         if (!tagsIds || tagsIds.length === 0) {
             return [];
         }
-        var tags = tagsIds.map(getTag);
+        var tags = tagsIds.map(getTag).filter(Boolean);
         tags.sort(function (a, b) {
             return a.name.localeCompare(b.name);
         });
@@ -56,29 +59,21 @@ sputnik.factory('articlesService', function ($rootScope, articlesStorage, feedsS
     }
     
     function recountUnread(feedUrl) {
-        var deferred = Q.defer();
-        
-        articlesStorage.countUnread(feedUrl)
+        return articlesStorage.countUnread(feedUrl)
         .then(function (count) {
-            $rootScope.$broadcast('unreadArticlesCountChanged', feedUrl, count);
-            deferred.resolve(count);
+            events.emit('unreadArticlesCountChanged', feedUrl, count);
+            return count;
         });
-        
-        return deferred.promise;
     }
     
     function reloadTags() {
-        var deferred = Q.defer();
-        
-        articlesStorage.getTags()
+        return articlesStorage.getTags()
         .then(function (refreshedTags) {
             refreshedTags.forEach(decorateTag);
             tags = refreshedTags;
-            $rootScope.$broadcast('tagsListChanged');
-            deferred.resolve();
+            events.emit('tagsListChanged');
+            return refreshedTags;
         });
-        
-        return deferred.promise;
     }
     
     function decorateArticle(art) {
@@ -89,54 +84,38 @@ sputnik.factory('articlesService', function ($rootScope, articlesStorage, feedsS
         art.tags = mapTagIdsToTags(art.tags);
         
         art.setIsRead = function (newIsRead) {
-            var deferred = Q.defer();
-            
-            this.isRead = newIsRead;
-            var that = this;
-            articlesStorage.setArticleReadState(this.guid, newIsRead)
+            return articlesStorage.setArticleReadState(this.guid, newIsRead)
             .then(function () {
-                return recountUnread(that.feed.url);
+                return recountUnread(art.feedUrl);
             })
             .then(function () {
-                $rootScope.$broadcast('articleReadStateChanged', art);
-                deferred.resolve();
+                art.isRead = newIsRead;
+                events.emit('articleReadStateChanged', art);
             });
-            
-            return deferred.promise;
         };
         
         art.toggleTag = function (tagId) {
-            var deferred = Q.defer();
-            
             var promise;
             if (hasTag(art, tagId)) {
                 promise = articlesStorage.untagArticle(art.guid, tagId);
             } else {
                 promise = articlesStorage.tagArticle(art.guid, tagId);
             }
-            promise.then(function (article) {
+            return promise.then(function (article) {
                 art.tags = mapTagIdsToTags(article.tags);
-                $rootScope.$broadcast('articleTagsChanged', art);
-                deferred.resolve();
+                events.emit('articleTagsChanged', art);
             });
-            
-            return deferred.promise;
         };
         
         art.addNewTag = function (tagName) {
-            var deferred = Q.defer();
-            
-            addTag(tagName)
+            return addTag(tagName)
             .then(function (addedTag) {
                 return articlesStorage.tagArticle(art.guid, addedTag._id);
             })
             .then(function (article) {
                 art.tags = mapTagIdsToTags(article.tags);
-                $rootScope.$broadcast('articleTagsChanged', art);
-                deferred.resolve();
+                events.emit('articleTagsChanged', art);
             });
-            
-            return deferred.promise;
         }
         
         art.feed = feedsService.getFeedByUrl(art.feedUrl);
@@ -164,18 +143,11 @@ sputnik.factory('articlesService', function ($rootScope, articlesStorage, feedsS
     }
     
     function getArticles(feedUrls, from, to, options) {
-        var deferred = Q.defer();
-        
-        articlesStorage.getArticles(feedUrls, from, to, options)
+        return articlesStorage.getArticles(feedUrls, from, to, options)
         .then(function (result) {
             result.articles.forEach(decorateArticle);
-            deferred.resolve(result);
-        })
-        .catch(function (err) {
-            console.log(err)
+            return result;
         });
-        
-        return deferred.promise;
     }
     
     function markAllAsReadInFeeds(feedUrls) {
@@ -188,17 +160,12 @@ sputnik.factory('articlesService', function ($rootScope, articlesStorage, feedsS
     }
     
     function addTag(name) {
-        var deferred = Q.defer();
-        
-        articlesStorage.addTag(name)
+        return articlesStorage.addTag(name)
         .then(function (tag) {
-            reloadTags()
-            .then(function () {
-                deferred.resolve(getTag(tag._id));
+            return reloadTags().then(function () {
+                return getTag(tag._id);
             });
         });
-        
-        return deferred.promise;
     }
     
     return  {
@@ -218,4 +185,4 @@ sputnik.factory('articlesService', function ($rootScope, articlesStorage, feedsS
         },
         addTag: addTag,
     };
-});
+};

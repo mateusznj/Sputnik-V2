@@ -1,8 +1,6 @@
-#Sputnik
-Open source RSS reader built upon [node-webkit](https://github.com/rogerwang/node-webkit).
+# Sputnik
 
-##Where to get it?
-To download latest version visit [Sputnik's website](http://sputnik.szwacz.com).
+Open-source RSS and Atom reader built with [NW.js](https://nwjs.io/) and Preact.
 
 ##License (GPLv3)
 Copyright (C) 2013 Jakub Szwacz <sputnik@szwacz.com>
@@ -25,3 +23,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Sputnik does not send usage telemetry or check for updates automatically. Feeds and
 their images are still downloaded from the URLs configured by the user. Check the
 [GitHub releases](https://github.com/dz0ny/sputnik/releases) page for updates.
+
+## Development
+
+The app uses Preact and requires Node.js 22 or newer. To install dependencies and
+run the security regression tests from the repository root:
+
+```text
+cd app
+npm ci
+npm test
+```
+
+To launch the desktop app, use an NW.js runtime whose embedded Node.js version is
+22 or newer, then run `nw .` from the `app` directory. The old AngularJS UI and
+Jasmine/Bower test harness have been removed.

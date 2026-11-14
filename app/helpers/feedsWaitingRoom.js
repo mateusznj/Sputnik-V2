@@ -12,10 +12,19 @@ exports.init = function (waitingPlacePath) {
         
         var name = crypto.pseudoRandomBytes(8).toString('hex');
         var dataPath = pathUtil.resolve(waitingPlacePath, name);
-        var buf = new Buffer(2 + url.length);
-        buf.writeUInt16BE(url.length, 0);
-        buf.write(url, 2);
+        var urlBuffer = Buffer.from(String(url), 'utf8');
+        if (urlBuffer.length > 65535) {
+            def.reject(new RangeError('Feed URL is too long to store.'));
+            return def.promise;
+        }
+        var buf = Buffer.alloc(2 + urlBuffer.length);
+        buf.writeUInt16BE(urlBuffer.length, 0);
+        urlBuffer.copy(buf, 2);
         fs.writeFile(dataPath, Buffer.concat([buf, data]), function (err) {
+            if (err) {
+                def.reject(err);
+                return;
+            }
             def.resolve();
         });
         
@@ -26,12 +35,32 @@ exports.init = function (waitingPlacePath) {
         var def = Q.defer();
         
         fs.readdir(waitingPlacePath, function (err, files) {
+            if (err) {
+                def.reject(err);
+                return;
+            }
             if (files.length > 0) {
                 var dataPath = pathUtil.resolve(waitingPlacePath, files[0]);
                 fs.readFile(dataPath, function (err, buf) {
+                    if (err) {
+                        def.reject(err);
+                        return;
+                    }
+                    if (buf.length < 2) {
+                        def.reject(new Error('Queued feed data is invalid.'));
+                        return;
+                    }
                     var urlLen = buf.readUInt16BE(0);
+                    if (buf.length < 2 + urlLen) {
+                        def.reject(new Error('Queued feed data is incomplete.'));
+                        return;
+                    }
                     var url = buf.toString('utf8', 2, 2 + urlLen);
                     fs.unlink(dataPath, function (err) {
+                        if (err) {
+                            def.reject(err);
+                            return;
+                        }
                         def.resolve({
                             url: url,
                             data: buf.slice(2 + urlLen)
@@ -39,7 +68,9 @@ exports.init = function (waitingPlacePath) {
                     });
                 });
             } else {
-                def.reject();
+                var emptyError = new Error('No feeds are waiting to be parsed.');
+                emptyError.code = 'EMPTY_QUEUE';
+                def.reject(emptyError);
             }
         });
         

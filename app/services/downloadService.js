@@ -1,6 +1,6 @@
 'use strict';
 
-sputnik.factory('downloadService', function (net, feedParser, config, feedsService, articlesService, feedsWaitingRoom) {
+module.exports = function createDownloadService(net, feedParser, config, feedsService, articlesService, feedsWaitingRoom) {
     
     var Q = require('q');
     
@@ -193,7 +193,9 @@ sputnik.factory('downloadService', function (net, feedParser, config, feedsServi
             net.getUrl(url)
             .then(function (buff) {
                 feedsWaitingRoom.storeOne(url, buff)
-                .then(notify);
+                .then(notify, function (err) {
+                    deferred.reject(err);
+                });
             }, notify);
             
         }
@@ -227,8 +229,8 @@ sputnik.factory('downloadService', function (net, feedParser, config, feedsServi
                 feed.averageActivity = calculateAverageActivity(result.articles);
             }
             return articlesService.digest(url, result.articles);
-        }, def.reject)
-        .then(def.resolve);
+        })
+        .then(def.resolve, def.reject);
         
         return def.promise;
     }
@@ -240,8 +242,13 @@ sputnik.factory('downloadService', function (net, feedParser, config, feedsServi
             feedsWaitingRoom.getOne()
             .then(function (result) {
                 parseFeed(result.url, result.data).then(tick, tick);
-            }, def.resolve);
-            // resolve on error, because waiting room returns error when has no feeds left
+            }, function (err) {
+                if (err && err.code === 'EMPTY_QUEUE') {
+                    def.resolve();
+                } else {
+                    def.reject(err);
+                }
+            });
         }
         
         tick();
@@ -291,6 +298,9 @@ sputnik.factory('downloadService', function (net, feedParser, config, feedsServi
             deferred.resolve({
                 backgroundJob: fetchFeedsBackground(baskets.lo)
             });
+        }, function (err) {
+            isWorking = false;
+            deferred.reject(err);
         });
         
         return deferred.promise;
@@ -306,4 +316,4 @@ sputnik.factory('downloadService', function (net, feedParser, config, feedsServi
         calculateAverageActivity: calculateAverageActivity,
         getActivityBaskets: getActivityBaskets
     };
-});
+};

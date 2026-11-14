@@ -136,8 +136,8 @@ exports.make = function (dbPath) {
     function digest(feedUrl, harvestedArticles) {
         var digestPromise = Q.defer();
         
-        if (!harvestedArticles || harvestedArticles.length === 0) {
-            digestPromise.reject();
+        if (!Array.isArray(harvestedArticles)) {
+            digestPromise.reject(new TypeError('Expected parsed feed articles to be an array.'));
             return digestPromise.promise;
         }
         

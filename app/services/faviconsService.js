@@ -1,6 +1,6 @@
 'use strict';
 
-sputnik.factory('faviconsService', function (config, net, $rootScope) {
+module.exports = function createFaviconsService(config, net, events) {
     
     var cheerio = require('cheerio');
     var urlUtil = require('url');
@@ -89,7 +89,7 @@ sputnik.factory('faviconsService', function (config, net, $rootScope) {
                 blindTryFaviconUrls(siteUrl)
                 .then(deferred.resolve, deferred.reject);
             }
-        });
+        }, deferred.reject);
         return deferred.promise;
     }
     
@@ -111,8 +111,12 @@ sputnik.factory('faviconsService', function (config, net, $rootScope) {
             var filename = crypto.createHash('md5').update(feed.url).digest('hex') + '.' + result.format;
             var filePath = storeDir + '/' + filename;
             fs.writeFile(filePath, result.faviconBytes, function (err) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
                 feed.favicon = filePath;
-                $rootScope.$broadcast('faviconUpdated');
+                events.emit('faviconUpdated');
                 deferred.resolve();
             });
         }, function () {
@@ -125,15 +129,11 @@ sputnik.factory('faviconsService', function (config, net, $rootScope) {
     }
     
     function updateMany(feeds) {
-        feeds = feeds.concat();
-        
-        function next() {
-            if (feeds.length > 0) {
-                updateOne(feeds.pop()).then(next);
-            }
-        }
-        
-        next();
+        return feeds.reduce(function (promise, feed) {
+            return promise.then(function () {
+                return feed.siteUrl ? updateOne(feed) : undefined;
+            });
+        }, Q());
     }
     
     return  {
@@ -143,4 +143,4 @@ sputnik.factory('faviconsService', function (config, net, $rootScope) {
         deleteFaviconIfHas: deleteFaviconIfHas,
     };
     
-});
+};
