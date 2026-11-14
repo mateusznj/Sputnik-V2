@@ -42,3 +42,7 @@ downloads the pinned NW.js runtime and packages the app with NSIS. The same
 process runs on Windows in GitHub Actions for manual builds and `v*` tags; the
 installer is published there as a downloadable workflow artifact and attached
 to GitHub releases created from `v*` tags.
+
+To run the portable build without installing, open `release/windows/Sputnik.exe`.
+Keep the entire `release/windows` folder together; the executable needs the
+bundled NW.js runtime and application files beside it. Node.js is not required.

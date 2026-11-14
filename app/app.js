@@ -422,7 +422,7 @@ function App() {
                 ${category === '__new__' ? html`<label>New category
                     <input value=${newCategory} onInput=${function (event) { setNewCategory(event.currentTarget.value); }} />
                 </label>` : null}
-                <button class="primary-button" type="submit" disabled=${refreshing}>{refreshing ? 'Checking feed…' : 'Add feed'}</button>
+                <button class="primary-button" type="submit" disabled=${refreshing}>${refreshing ? 'Checking feed…' : 'Add feed'}</button>
             </form>
         </main>`;
     }
