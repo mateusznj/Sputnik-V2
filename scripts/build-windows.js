@@ -14,10 +14,18 @@ var nwbuildOptions = appManifest.nwbuild || {};
 async function build() {
     fs.mkdirSync(outputDirectory, { recursive: true });
 
-    var makensisPath = process.env.MAKENSIS_PATH || 'makensis';
-    console.log('Using NSIS compiler: ' + makensisPath);
-    if (path.isAbsolute(makensisPath) && !fs.existsSync(makensisPath)) {
-        throw new Error('NSIS compiler does not exist: ' + makensisPath);
+    var makensisPath = process.env.MAKENSIS_PATH;
+    if (makensisPath) {
+        if (!path.isAbsolute(makensisPath)) {
+            throw new Error('MAKENSIS_PATH must be an absolute path to makensis.exe: ' + makensisPath);
+        }
+        if (!fs.existsSync(makensisPath)) {
+            throw new Error('NSIS compiler does not exist: ' + makensisPath);
+        }
+        process.env.PATH = path.dirname(makensisPath) + path.delimiter + process.env.PATH;
+        console.log('Added NSIS compiler directory to PATH: ' + path.dirname(makensisPath));
+    } else {
+        console.log('Using NSIS compiler from PATH: makensis');
     }
 
     var nwBuilderEntry = require.resolve('nw-builder', { paths: [appDirectory] });
@@ -36,8 +44,7 @@ async function build() {
             productVersion: appManifest.version
         },
         nsis: {
-            ...nwbuildOptions.nsis,
-            makensisPath: makensisPath
+            ...nwbuildOptions.nsis
         }
     });
 
