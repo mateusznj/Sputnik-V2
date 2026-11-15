@@ -4,7 +4,7 @@
   "version": "2.0.0",
   "scripts": {
     "build:windows": "node ../scripts/build-windows.js",
-    "test": "node --test ../spec/security/articleHtml.test.js ../spec/integration/feedsAndArticles.test.js",
+    "test": "node --test ../spec/security/articleHtml.test.js ../spec/integration/feedsAndArticles.test.js ../spec/integration/net.test.js",
     "test:security": "node --test ../spec/security/articleHtml.test.js"
   },
   "engines": {

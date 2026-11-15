@@ -9,6 +9,7 @@ exports.getUrl = function (url, options) {
     return Q(axios.get(url, {
         timeout: options.timeout || 20000,
         responseType: 'arraybuffer',
+        adapter: 'http',
         headers: {
             'User-Agent': 'Sputnik News Reader',
             'Accept-Encoding': 'gzip, deflate'
