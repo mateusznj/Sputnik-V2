@@ -24,12 +24,6 @@ jobs:
       - name: Install NSIS
         run: |
           choco install nsis --yes --no-progress
-          $compiler = Join-Path "${env:ProgramFiles(x86)}" 'NSIS\makensis.exe'
-          if (-not (Test-Path $compiler)) {
-            throw "NSIS compiler was not found at $compiler"
-          }
-          & $compiler /VERSION
-          "MAKENSIS_PATH=$compiler" >> $env:GITHUB_ENV
       - name: Install app and build dependencies
         run: npm ci
         working-directory: app
@@ -37,7 +31,14 @@ jobs:
         run: npm test
         working-directory: app
       - name: Build installer
-        run: npm run build:windows
+        run: |
+          $compiler = Join-Path "${env:ProgramFiles(x86)}" 'NSIS\makensis.exe'
+          if (-not (Test-Path $compiler)) {
+            throw "NSIS compiler was not found at $compiler"
+          }
+          & $compiler /VERSION
+          $env:MAKENSIS_PATH = $compiler
+          npm run build:windows
         working-directory: app
       - uses: actions/upload-artifact@v4
         with:

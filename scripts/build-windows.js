@@ -14,6 +14,12 @@ var nwbuildOptions = appManifest.nwbuild || {};
 async function build() {
     fs.mkdirSync(outputDirectory, { recursive: true });
 
+    var makensisPath = process.env.MAKENSIS_PATH || 'makensis';
+    console.log('Using NSIS compiler: ' + makensisPath);
+    if (path.isAbsolute(makensisPath) && !fs.existsSync(makensisPath)) {
+        throw new Error('NSIS compiler does not exist: ' + makensisPath);
+    }
+
     var nwBuilderEntry = require.resolve('nw-builder', { paths: [appDirectory] });
     var nwbuild = (await import(pathToFileURL(nwBuilderEntry).href)).default;
     var installerPath = await nwbuild({
@@ -31,7 +37,7 @@ async function build() {
         },
         nsis: {
             ...nwbuildOptions.nsis,
-            makensisPath: process.env.MAKENSIS_PATH || 'makensis'
+            makensisPath: makensisPath
         }
     });
 
