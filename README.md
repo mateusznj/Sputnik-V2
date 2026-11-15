@@ -1,34 +1,69 @@
 # Sputnik
 
-Open-source RSS and Atom reader built with [NW.js](https://nwjs.io/) and Preact.
+Sputnik to czytnik kanałów RSS i Atom, którego historia zaczęła się w 2013 roku.
+To repozytorium jest eksperymentalną, rozwijaną współcześnie wersją projektu
+sprzed około 13 lat — nie jest oficjalnym wydaniem ani obietnicą pełnej zgodności
+z oryginałem. Celem jest sprawdzenie, czy klasyczną aplikację desktopową można
+bezpiecznie i sensownie ożywić, stopniowo ją modernizując.
 
-##License (GPLv3)
-Copyright (C) 2013 Jakub Szwacz <sputnik@szwacz.com>
+Projekt jest we wczesnej fazie rozwoju. Mogą występować błędy, a kierunek dalszych
+prac może się zmieniać na podstawie testów i opinii użytkowników.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+## Zrzut ekranu
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+![Sputnik — lista artykułów z kanału Dziennik Internautów](docs/images/sputnik-main.png)
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+## Co już działa
 
-## Privacy and updates
+- Czytanie kanałów RSS i Atom oraz pobieranie artykułów.
+- Dodawanie i organizowanie kanałów, kategorie, tagi i oznaczanie przeczytanych
+  artykułów.
+- Import i eksport subskrypcji OPML.
+- Oczyszczanie niezaufanej treści artykułów przed wyświetleniem.
+- Przenośna wersja Windows z dołączonym runtime’em — do uruchomienia nie trzeba
+  instalować Node.js.
 
-Sputnik does not send usage telemetry or check for updates automatically. Feeds and
-their images are still downloaded from the URLs configured by the user. Check the
-[GitHub releases](https://github.com/dz0ny/sputnik/releases) page for updates.
+Sputnik nie wysyła telemetrii ani nie sprawdza automatycznie aktualizacji.
+Kanały i obrazy są pobierane z adresów używanych przez aplikację. Aplikacja
+korzysta z NW.js i Preact.
 
-## Development
+## Plan rozwoju
 
-The app uses Preact. End users do not need Node.js; the Windows installer
-includes the NW.js runtime. To build the installer, the build machine needs
-Node.js 22 or newer and NSIS. From the repository root:
+To wstępny plan, a nie zobowiązanie do konkretnych terminów. Priorytetem jest
+stabilność i prywatność; większe funkcje, takie jak AI i aplikacja mobilna, będą
+uzależnione od opinii użytkowników i wykonalności.
+
+1. **Stabilizacja wersji desktopowej**
+   - Naprawianie błędów dodawania i odświeżania kanałów.
+   - Rozbudowa testów regresji oraz sprawdzanie typowych formatów RSS i Atom.
+   - Poprawa komunikatów błędów, dostępności i obsługi długich lub uszkodzonych
+     kanałów.
+2. **Wygoda i niezawodność**
+   - Lepsza nawigacja, wyszukiwanie i filtrowanie artykułów.
+   - Kopie zapasowe, odtwarzanie danych oraz dopracowanie importu i eksportu.
+   - Uproszczenie procesu aktualizacji i przygotowania wydań.
+3. **Podsumowania artykułów z użyciem AI — eksperymentalnie**
+   - Najpierw prototyp i ocena jakości oraz kosztów.
+   - Funkcja będzie opcjonalna i wyłączona domyślnie.
+   - Przed wdrożeniem zostanie jasno określone, czy treść jest przetwarzana
+     lokalnie, czy wysyłana do zewnętrznej usługi; wysyłanie danych bez zgody
+     użytkownika nie jest założeniem projektu.
+4. **Eksploracja aplikacji mobilnej**
+   - Sprawdzenie możliwości współdzielenia logiki z wersją desktopową.
+   - Projekt mobilnego interfejsu i wybór technologii dopiero po prototypie.
+   - Synchronizacja między urządzeniami wymagałaby osobnej decyzji o architekturze,
+     bezpieczeństwie i ewentualnym serwerze — nie jest jeszcze dostępna.
+
+## Uruchomienie wersji przenośnej Windows
+
+Otwórz `release/windows/Sputnik.exe` i pozostaw obok niego cały folder
+`release/windows`. Program korzysta z dołączonych plików NW.js, więc użytkownik
+nie musi instalować Node.js ani uruchamiać instalatora.
+
+## Budowanie i testy
+
+Do budowania potrzebny jest Windows, Node.js 22 lub nowszy oraz NSIS. Z katalogu
+głównego repozytorium:
 
 ```text
 cd app
@@ -37,12 +72,12 @@ npm test
 npm run build:windows
 ```
 
-The installer is written to `release/windows/Sputnik-x64-Setup.exe`. The script
-downloads the pinned NW.js runtime and packages the app with NSIS. The same
-process runs on Windows in GitHub Actions for manual builds and `v*` tags; the
-installer is published there as a downloadable workflow artifact and attached
-to GitHub releases created from `v*` tags.
+Wynikiem jest przenośna aplikacja w `release/windows/` oraz instalator
+`release/windows/Sputnik-x64-Setup.exe`. Workflow GitHub Actions potrafi zbudować
+instalator ręcznie lub dla tagu `v*`.
 
-To run the portable build without installing, open `release/windows/Sputnik.exe`.
-Keep the entire `release/windows` folder together; the executable needs the
-bundled NW.js runtime and application files beside it. Node.js is not required.
+## Licencja
+
+Oryginalny Sputnik deklaruje licencję GNU GPL v3 lub nowszą. Autorem pierwotnego
+projektu jest Jakub Szwacz; zachowaj informacje o autorstwie i licencji przy
+dalszym rozpowszechnianiu.
